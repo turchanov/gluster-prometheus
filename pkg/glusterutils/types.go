@@ -1,7 +1,7 @@
 package glusterutils
 
 import (
-	"github.com/gluster/gluster-prometheus/gluster-exporter/conf"
+	"github.com/gluster/gluster-prometheus/cmd/gluster-exporter/conf"
 )
 
 // Peer represents a Gluster Peer

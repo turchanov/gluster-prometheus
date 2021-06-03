@@ -24,7 +24,7 @@ SYSCONFDIR ?= $(BASE_PREFIX)/etc
 RUNDIR ?= $(BASE_PREFIX)/var/run
 
 
-EXPORTER = gluster-exporter
+EXPORTER = cmd/gluster-exporter
 
 BUILDDIR = build
 

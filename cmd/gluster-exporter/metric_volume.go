@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/gluster/gluster-prometheus/gluster-exporter/conf"
+	"github.com/gluster/gluster-prometheus/cmd/gluster-exporter/conf"
 	"github.com/gluster/gluster-prometheus/pkg/glusterutils"
 	"github.com/gluster/gluster-prometheus/pkg/glusterutils/glusterconsts"
 	"github.com/prometheus/client_golang/prometheus"
