@@ -534,8 +534,17 @@ func parseProcMounts() ([]ProcMounts, error) {
 	for _, line := range strings.Split(string(b), "\n") {
 		if strings.HasPrefix(line, "/") {
 			tokens := strings.Fields(line)
+
+			dev, err := filepath.EvalSymlinks(tokens[0])
+			if err != nil {
+				log.WithError(err).WithFields(log.Fields{
+					"path": tokens[0],
+				}).Debug("Error evaluating realpath")
+				continue
+			}
+
 			procMounts = append(procMounts,
-				ProcMounts{Name: tokens[1], Device: tokens[0], FSType: tokens[2], MountOptions: tokens[3]})
+				ProcMounts{Name: tokens[1], Device: dev, FSType: tokens[2], MountOptions: tokens[3]})
 		}
 	}
 	return procMounts, nil
@@ -575,15 +584,8 @@ func (self *lvStats) find(path string) (stats []LVMStat, thinPoolStats []ThinPoo
 	var thinPoolNames []string
 	for _, lv := range self.lvs {
 		for _, mount := range self.mounts {
-			dev, err := filepath.EvalSymlinks(mount.Device)
-			if err != nil {
-				log.WithError(err).WithFields(log.Fields{
-					"path": mount.Device,
-				}).Debug("Error evaluating realpath")
-				continue
-			}
 			// Check if the logical volume is mounted as a gluster brick
-			if lv.Device == dev && strings.HasPrefix(path, mount.Name) && strings.Contains(path, "/"+lv.VGName+"/"+lv.Name) {
+			if lv.Device == mount.Device && strings.HasPrefix(path, mount.Name) && strings.Contains(path, "/"+lv.VGName+"/"+lv.Name) {
 				// Check if the LV is a thinly provisioned volume and if yes then get the thin pool LV name
 				if lv.Attr[0] == 'V' {
 					tpName := lv.PoolLV
