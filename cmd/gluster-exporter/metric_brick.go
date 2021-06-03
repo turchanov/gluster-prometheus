@@ -396,6 +396,26 @@ type VGDetails struct {
 	VGExtentFree    string `json:"vg_free_count"`
 }
 
+type lvStats struct {
+    err         error
+    mounts      []ProcMounts
+    lvs         []LVMStat
+    tpStats     []ThinPoolStat
+}
+
+func getLVStats() (*lvStats, error) {
+    result := new(lvStats)
+
+    result.mounts, result.err = parseProcMounts()
+    if result.err != nil {
+        return result, result.err
+    }
+
+    result.lvs, result.tpStats, result.err = getLVS()
+
+    return result, result.err
+}
+
 func getLVS() ([]LVMStat, []ThinPoolStat, error) {
 	cmd := "lvm vgs --unquoted --reportformat=json --noheading --nosuffix --units m -o lv_uuid,lv_name,data_percent,pool_lv,lv_attr,lv_size,lv_path,lv_metadata_size,metadata_percent,vg_name,vg_extent_count,vg_free_count"
 
@@ -547,18 +567,14 @@ func getGlusterThinPoolLabels(brick glusterutils.Brick, vol string, subvol strin
 	}
 }
 
-func lvmUsage(path string) (stats []LVMStat, thinPoolStats []ThinPoolStat, err error) {
-	mountPoints, err := parseProcMounts()
-	if err != nil {
+func (self *lvStats) find(path string) (stats []LVMStat, thinPoolStats []ThinPoolStat, err error) {
+	if self.err != nil {
 		return stats, thinPoolStats, err
 	}
+
 	var thinPoolNames []string
-	lvs, tpStats, err := getLVS()
-	if err != nil {
-		return stats, thinPoolStats, err
-	}
-	for _, lv := range lvs {
-		for _, mount := range mountPoints {
+	for _, lv := range self.lvs {
+		for _, mount := range self.mounts {
 			dev, err := filepath.EvalSymlinks(mount.Device)
 			if err != nil {
 				log.WithError(err).WithFields(log.Fields{
@@ -579,7 +595,7 @@ func lvmUsage(path string) (stats []LVMStat, thinPoolStats []ThinPoolStat, err e
 	}
 	// Iterate and select only those thin pool LVs whose thinly provisioned volumes are mounted as gluster bricks
 	for _, tpName := range thinPoolNames {
-		for _, tpStat := range tpStats {
+		for _, tpStat := range self.tpStats {
 			if tpName == tpStat.ThinPoolName {
 				thinPoolStats = append(thinPoolStats, tpStat)
 			}
@@ -607,6 +623,8 @@ func brickUtilization(gluster glusterutils.GInterface) error {
 		// Return without exporting metric in this cycle
 		return err
 	}
+
+        lvs, _ := getLVStats()
 
 	for _, volume := range volumes {
 		if volume.State != glusterconsts.VolumeStateStarted {
@@ -649,7 +667,7 @@ func brickUtilization(gluster glusterutils.GInterface) error {
 						}
 					}
 					// Get lvm usage details
-					stats, thinStats, err := lvmUsage(brick.Path)
+					stats, thinStats, err := lvs.find(brick.Path)
 					if err != nil {
 						log.WithError(err).WithFields(log.Fields{
 							"volume":     volume.Name,
