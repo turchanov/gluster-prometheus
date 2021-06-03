@@ -16,7 +16,7 @@ var (
 			Help: "Hostname of the gluster-prometheus instance providing this metric",
 		},
 		{
-			Name: "volume_name",
+			Name: "volume",
 			Help: "Name of the volume",
 		},
 	}
@@ -27,7 +27,7 @@ var (
 			Help: "Hostname of the gluster-prometheus instance providing this metric",
 		},
 		{
-			Name: "volume_name",
+			Name: "volume",
 			Help: "Name of the volume",
 		},
 		{
@@ -147,7 +147,7 @@ func volumeInfo(gluster glusterutils.GInterface) (err error) {
 		brickCountLabels := prometheus.Labels{
 			"cluster_id":  clusterID,
 			"instance":    fqdn,
-			"volume_name": vol.Name,
+			"volume":      vol.Name,
 		}
 		volStatusGaugeVecs[glusterVolStatusBrickCount].Set(brickCountLabels, float64(len(vol.Nodes)))
 
@@ -157,7 +157,7 @@ func volumeInfo(gluster glusterutils.GInterface) (err error) {
 			perBrickLabels := prometheus.Labels{
 				"cluster_id":  clusterID,
 				"instance":    fqdn,
-				"volume_name": vol.Name,
+				"volume":      vol.Name,
 				"hostname":    node.Hostname,
 				"peerid":      node.PeerID,
 				"pid":         brickPid,
