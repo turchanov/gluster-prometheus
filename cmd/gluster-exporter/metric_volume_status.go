@@ -10,6 +10,7 @@ import (
 
 var (
 	volStatusBrickCountLabels = []MetricLabel{
+		clusterIDLabel,
 		{
 			Name: "instance",
 			Help: "Hostname of the gluster-prometheus instance providing this metric",
@@ -20,6 +21,7 @@ var (
 		},
 	}
 	volStatusPerBrickLabels = []MetricLabel{
+		clusterIDLabel,
 		{
 			Name: "instance",
 			Help: "Hostname of the gluster-prometheus instance providing this metric",
@@ -143,6 +145,7 @@ func volumeInfo(gluster glusterutils.GInterface) (err error) {
 
 	for _, vol := range volumes {
 		brickCountLabels := prometheus.Labels{
+			"cluster_id":  clusterID,
 			"instance":    fqdn,
 			"volume_name": vol.Name,
 		}
@@ -152,6 +155,7 @@ func volumeInfo(gluster glusterutils.GInterface) (err error) {
 			brickPid := strconv.Itoa(node.PID)
 
 			perBrickLabels := prometheus.Labels{
+				"cluster_id":  clusterID,
 				"instance":    fqdn,
 				"volume_name": vol.Name,
 				"hostname":    node.Hostname,

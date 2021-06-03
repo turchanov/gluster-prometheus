@@ -8,12 +8,14 @@ import (
 
 var (
 	peerCountMetricLabels = []MetricLabel{
+		clusterIDLabel,
 		{
 			Name: "instance",
 			Help: "Hostname of the gluster-prometheus instance providing this metric",
 		},
 	}
 	peerSCMetricLabels = []MetricLabel{
+		clusterIDLabel,
 		{
 			Name: "instance",
 			Help: "Hostname of the gluster-prometheus instance providing this metric",
@@ -82,7 +84,8 @@ func peerInfo(gluster glusterutils.GInterface) (err error) {
 	}
 
 	peerCountLabels := prometheus.Labels{
-		"instance": fqdn,
+		"cluster_id": clusterID,
+		"instance":   fqdn,
 	}
 
 	peerGaugeVecs[glusterPeerCount].Set(peerCountLabels, float64(len(peers)))
@@ -90,9 +93,10 @@ func peerInfo(gluster glusterutils.GInterface) (err error) {
 	var connected int
 	for _, peer := range peers {
 		peerSCLabels := prometheus.Labels{
-			"instance": fqdn,
-			"hostname": peer.PeerAddresses[0],
-			"uuid":     peer.ID,
+			"cluster_id": clusterID,
+			"instance":   fqdn,
+			"hostname":   peer.PeerAddresses[0],
+			"uuid":       peer.ID,
 		}
 		if peer.Online {
 			connected = 1
